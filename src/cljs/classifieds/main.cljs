@@ -118,6 +118,3 @@
      (update-countries!)
      (update-sites!)
      (reagent/render-component [index-tpl] (.-body js/document))))
-
-
-
