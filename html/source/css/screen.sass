@@ -1,0 +1,49 @@
+$vs: 32px
+$hs: 32px
+
+body
+  background: #fff
+  margin: 0
+
+h1, h2, h3, h4, h5, h6
+  margin: 0px
+  margin-bottom: $vs
+
+.container
+  max-width: 728px
+
+header
+  background: #f0f0f0 url("../img/laptop.jpg") no-repeat top center
+  background-size: 100%
+  border-bottom: 1px solid #ccc
+  color: #fff
+  .container
+    padding-top: ($vs * 2)
+    padding-bottom: ($vs * 2)
+    background: rgba(0, 0, 0, 0.3)
+  h1
+    text-align: center
+    font-size: 4em
+    font-weight: bold
+  .blurb
+    padding: $vs $hs
+    font-size: 1.2em
+    p
+      margin: 0px
+
+section
+  background: #fff
+  padding: $vs $hs
+  margin: $vs*2 auto
+
+.list-headers
+  font-weight: bold
+
+.helptext
+  margin-top: ($vs * -0.4)
+  font-size: 0.9em
+  color: #999
+
+@media(max-width: 550px)
+  table .description
+    display: none

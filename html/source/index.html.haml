@@ -1,0 +1,54 @@
+---
+title: "Classifieds by country"
+---
+
+
+%section#classifieds-list
+  .row
+    .nine.columns
+      %h3 Classified Site Listing
+    .three.columns
+      %form#country-select-form
+        %select.u-full-width.country-select(name="country_code")
+          %option(value="") All Countries
+          %option(value="US") United States
+  %table.u-full-width
+    %thead
+      %tr
+        %th Country
+        %th City
+        %th Url
+        %th.description Description
+    %tbody
+      %tr
+        %td.country
+        %td.city
+        %td.url
+        %td.description
+
+%section#submission-form
+  %a(name="submission-form")
+  %h3 Don't see what you expected? Suggest a site!
+  %form(action="/api/v1/sites" method="post")
+    .row
+
+      .six.columns
+        %label(for="country_code") Country
+        %select.u-full-width.country-select(name="country_code")
+          %option(value="CA") Canada
+
+      .six.columns
+        %label(for="city") City
+        %input.city.u-full-width(name="city" type="text")
+        %p.helptext Optional
+
+    %label(for="url") Url
+    %input.url.u-full-width(name="url" type="text")
+    %p.helptext Full url, i.e. http://...
+
+    %label(for="description") Description
+    %textarea.description.u-full-width(name="description")
+    %p.helptext Include a bit about where it's used, what listings are available, and what language it's in.
+
+    
+    %input.submit.button-primary(type="submit" value="Suggest a new classified site")

@@ -1,0 +1,29 @@
+!!!doctype html
+%html
+  %head
+    %meta(charset="utf-8")
+    %meta(content="IE=edge,chrome=1" http-equiv="X-UA-Compatible")
+    %title
+      = current_page.data.title || "The Middleman"
+    = stylesheet_link_tag "normalize", "skeleton", "screen"
+  %body{class: page_classes}
+    %header
+      .container
+        %h1 Classifieds of the World
+
+        .blurb
+          %p
+            If you find yourself moving around a lot, it's always useful to know where
+            you can find the local popular classified ads website, be it for accomodation,
+            goods, or services. Here's a place to make that insider knowledge available for everyone, but we need your help!
+            Take a minute or two and 
+            %a(href="#submission-form") enter your local site
+            using the form at the bottom of the page.
+
+
+    #main
+      .container
+        = yield
+
+  %script(src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js")
+  %script(src="main.js")
