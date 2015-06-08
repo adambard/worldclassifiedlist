@@ -35,20 +35,23 @@
   '[classifieds.server :refer [-main]]
   '[pandeiro.boot-http :refer [serve]]
   '[com.joshuadavey.boot-middleman :refer [middleman]]
+  '[environ.core :refer [env]]
 )
 
-(def password "QmXYGLaN3vhxK3hyaMzRhV9SWFRWGxkd")
 
 (task-options!
  ragtime {:driver-class "org.postgresql.Driver"
-          :database "jdbc:postgresql://localhost:5432/classifieds?user=classifieds_user"})
+          :database (str "jdbc:postgresql://localhost:5432/classifieds?user=classifieds_user&password=" (:database-password env))})
 
+
+(defn get-port []
+  (Integer/parseInt (get env :port "8080")))
 
 (deftask serve-api [])
 
 (deftask clj-dev []
   (comp
-    (serve :port 8080
+    (serve :port (get-port) 
            :handler 'classifieds.server/app
            :httpkit true
            :reload true)
@@ -56,9 +59,20 @@
 
 (deftask cljs-dev []
   (comp
-    (serve :port 8080 :handler 'classifieds.server/app :httpkit true)
+    (serve :port (get-port) :handler 'classifieds.server/app :httpkit true)
     (watch)
     (middleman :dir "html")
-    (reload)
-    (cljs-repl)
+    ;(reload)
+    ;(cljs-repl)
     (cljs :optimizations :none :source-map true)))
+
+(deftask build []
+  (comp
+    (middleman :dir "html")
+    (cljs :optimizations :whitespace)))
+
+(deftask run-server []
+  (comp
+    (serve :port (get-port) :handler 'classifieds.server/app :httpkit true)
+    (wait)))
+

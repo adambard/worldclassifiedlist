@@ -15,7 +15,8 @@
 (defonce my-db {:subprotocol "postgresql"
             :subname "//127.0.0.1:5432/classifieds"
             :classname "org.postgresql.Driver"
-            :user "classifieds_user"})
+            :user "classifieds_user"
+            :password (get env :database-password)})
 (defonce my-pool my-db)
 
 
