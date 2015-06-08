@@ -1,29 +1,21 @@
 (ns classifieds.main
   (:require [kioo.reagent :as kioo :refer [content set-attr do-> substitute listen]]
             [reagent.core :as reagent]
-            [jayq.core :as jq :refer [$]]
-            )
-  (:require-macros [kioo.reagent :refer [defsnippet deftemplate]])
-  )
+            [jayq.core :as jq :refer [$]])
+  (:require-macros [kioo.reagent :refer [defsnippet deftemplate]]))
+
+
+;; Data
 
 (def countries (reagent/atom {:countries [["" "All Countries"]]
                               :country-map {"" "All Countries"}}))
 
 
 (def data (reagent/atom {:sites []
-                         :flash ""
-                         }))
+                         :flash ""}))
 
-(defn country-select [field-name countries]
-  [:select {:field :list :name field-name}
-   (for [[code name] countries]
-     (do
-       (js/console.log code name)
-     [:option {:value (str "key-" code)} name]))])
 
-(defn strip-url-to-domain [url]
-  (second (re-find #"^https?://([^/]*)/?.*$" url))
-  )
+;; Ajax stuff
 
 (defn update-country-list! [result]
  (swap! countries assoc :countries (sort-by second result)
@@ -34,16 +26,14 @@
              :dataType "json"
              :success update-country-list!}))
 
+
 (defn update-site-list! [result]
   (swap! data assoc :sites (sort-by :country_code result)))
 
 (defn update-sites! []
   (jq/ajax {:url "/api/v1/sites"
             :dataType "json"
-            :success update-site-list!
-            })
-  )
-
+            :success update-site-list!}))
 
 (defn update-sites-by-country! [code]
   (if (empty? code)
@@ -52,6 +42,7 @@
               :dataType "json"
               :success update-site-list!})))
 
+
 (defn submit-site! [e]
   (.preventDefault e)
   (let [form-data (jq/serialize ($ "#submission-form form"))]
@@ -59,10 +50,13 @@
               :type "post"
               :data form-data
               :success (fn [& args]
-                         (swap! data assoc :flash "Thanks for your submission. It will be published following a review.")
-                         )
-              })))
+                         (swap! data assoc :flash "Thanks for your submission. It will be published following a review."))})))
 
+
+;; Utils
+
+(defn strip-url-to-domain [url]
+  (second (re-find #"^https?://([^/]*)/?.*$" url)))
 
 (defn country-option [[code name]]
   [:option {:key code :value code} name])
@@ -72,18 +66,15 @@
     (concat [[:option {:key "" :value ""} "All Countries"]]
             (map country-option countries))))
 
-
-(defn on-reload []
-  (js/alert "Reloaded")
-  )
-
 (defn country-by-code [code country-map]
-  (get country-map code "Unknown")
-  )
+  (get country-map code "Unknown"))
 
 (defn annotate-country-name [countries]
   (fn [site]
     (assoc site "country" (country-by-code (get site "country_code") countries))))
+
+
+;; Kioo Templates/snippets
 
 (defsnippet table-row-tpl "index.html" [:tbody :tr]
   [site]
@@ -92,56 +83,41 @@
                             (strip-url-to-domain (get site "url"))] )
   [:.country] (kioo/content (get site "country"))
   [:.city] (kioo/content (get site "city"))
-  [:.description] (kioo/content (get site "description"))
-  
-  }
-  )
+  [:.description] (kioo/content (get site "description"))})
 
 (defsnippet submission-form-tpl "index.html" [:#submission-form]
   []
   {[:form] (if (:flash @data) (kioo/before [:p.flash-message (:flash @data)]))
    [:input.submit] (kioo/listen :on-click submit-site!)
-   [:.country-select] (kioo/content (map country-option (:countries @countries))) 
-   }
-  )
+   [:.country-select] (kioo/content (map country-option (:countries @countries))) })
 
 (defsnippet classifieds-list-tpl "index.html" [:#classifieds-list]
   []
-  {
-
-   [:.country-select] (kioo/do->
+  {[:.country-select] (kioo/do->
                         (kioo/content (country-select-options (:countries @countries)))
-                        (kioo/listen :on-change #(js/console.log (->> (.-target %)
-                                                                      ($)
-                                                                      (jq/val)
-                                                                      (update-sites-by-country!)))))
-   
+                        (kioo/listen :on-change #(->> (.-target %)
+                                                      ($)
+                                                      (jq/val)
+                                                      (update-sites-by-country!))))
+
    [:table :tbody] (kioo/content (->> (:sites @data)
                                       (map (comp (annotate-country-name (:country-map @countries))
-                                                 js->clj 
-                                                 ))
+                                                 js->clj))
                                       (sort-by #(get % "country"))
                                       (map table-row-tpl)
-                                      (doall)))
-   
-   }
-  )
+                                      (doall)))})
 
 (deftemplate index-tpl "index.html" []
-  {
-    
-   [:#submission-form]  (kioo/substitute (submission-form-tpl))
-   [:#classifieds-list] (kioo/substitute (classifieds-list-tpl))
-   }
-  )
+  {[:#submission-form]  (kioo/substitute (submission-form-tpl))
+   [:#classifieds-list] (kioo/substitute (classifieds-list-tpl))})
+
+
+;; Start it up
 
 ($ (fn []
      (update-countries!)
      (update-sites!)
-     (reagent/render-component [index-tpl] (.-body js/document))
-
- (comment ))
- )
+     (reagent/render-component [index-tpl] (.-body js/document))))
 
 
 

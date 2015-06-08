@@ -3,8 +3,6 @@
  :dependencies '[;Tasks
                  [mbuczko/boot-ragtime "0.1.2"]
                  [adzerk/boot-cljs "0.0-2814-3"]
-                 [adzerk/boot-cljs-repl "0.1.10-SNAPSHOT"]
-                 [adzerk/boot-reload "0.2.6"]
                  [pandeiro/boot-http "0.6.3-SNAPSHOT"]
                  [com.joshuadavey/boot-middleman "0.0.3"]
 
@@ -30,49 +28,55 @@
 (require
   '[mbuczko.boot-ragtime :refer [ragtime]]
   '[adzerk.boot-cljs      :refer [cljs]]
-  '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]]
-  '[adzerk.boot-reload    :refer [reload]]
-  '[classifieds.server :refer [-main]]
   '[pandeiro.boot-http :refer [serve]]
   '[com.joshuadavey.boot-middleman :refer [middleman]]
   '[environ.core :refer [env]]
 )
 
 
+; Mangle environ's env var to provide some defaults
+(def env-defaults {
+    :database-name "classifieds"
+    :database-user "classifieds_user"
+    :database-password "QmXYGLaN3vhxK3hyaMzRhV9SWFRWGxkd"
+    :port "8080"})
+
+(alter-var-root #'env #(merge env-defaults %))
+
+
 (task-options!
- ragtime {:driver-class "org.postgresql.Driver"
-          :database (str "jdbc:postgresql://localhost:5432/classifieds?user=classifieds_user&password=" (:database-password env))})
+  ragtime {:driver-class "org.postgresql.Driver"
+          :database (str "jdbc:postgresql://localhost:5432/"
+                         (:database-name env)
+                         "?user=" (:database-user env)
+                         "&password=" (:database-password env))}
+  serve {:httpkit true
+         :handler 'classifieds.server/app
+         :port (Integer/parseInt (:port env "8080"))})
 
 
-(defn get-port []
-  (Integer/parseInt (get env :port "8080")))
-
-(deftask serve-api [])
-
-(deftask clj-dev []
+(deftask dev
+  "Start a dev server"
+  []
   (comp
-    (serve :port (get-port) 
-           :handler 'classifieds.server/app
-           :httpkit true
-           :reload true)
-    (repl)))
-
-(deftask cljs-dev []
-  (comp
-    (serve :port (get-port) :handler 'classifieds.server/app :httpkit true)
+    (serve :reload true)
+    (repl)
     (watch)
     (middleman :dir "html")
-    ;(reload)
-    ;(cljs-repl)
     (cljs :optimizations :none :source-map true)))
 
-(deftask build []
+
+(deftask build
+  "Build the files required for production"
+  []
   (comp
     (middleman :dir "html")
     (cljs :optimizations :whitespace)))
 
-(deftask run-server []
-  (comp
-    (serve :port (get-port) :handler 'classifieds.server/app :httpkit true)
-    (wait)))
 
+(deftask run-server
+  "Run the server with production settings"
+  []
+  (comp
+    (serve)
+    (wait)))
